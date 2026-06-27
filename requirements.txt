@@ -1,0 +1,8 @@
+customtkinter
+Pillow
+tkinterdnd2
+moviepy
+ffmpeg-python
+faster-whisper
+edge-tts
+deep-translator
