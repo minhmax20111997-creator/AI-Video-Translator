@@ -1,6 +1,7 @@
+﻿import tkinter as tk
 from gui import create_app
 
-app = create_app()
-
 if __name__ == "__main__":
-    app.mainloop()
+    root = tk.Tk()
+    app = create_app(root)
+    root.mainloop()
