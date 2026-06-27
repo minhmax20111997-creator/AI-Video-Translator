@@ -1,8 +1,9 @@
 from faster_whisper import WhisperModel
 import os
 from translator import translate_text
-# Nhập hàm tạo giọng nói gTTS từ file tts.py
 from tts import text_to_speech_async
+# Nhập hàm lồng tiếng video từ video.py vào
+from video import merge_audio_to_video
 
 def transcribe_video(video_path, log_callback):
     if not video_path or not os.path.exists(video_path):
@@ -12,13 +13,17 @@ def transcribe_video(video_path, log_callback):
     log_callback("🤖 AI đang khởi tạo mô hình Faster-Whisper...")
     model = WhisperModel("tiny", device="cpu", compute_type="int8")
     
-    log_callback("⏳ AI đang bóc băng, dịch thuật và tạo giọng nói v0.5...")
+    log_callback("⏳ AI đang bóc băng, dịch thuật và tạo giọng nói...")
     segments, info = model.transcribe(video_path, beam_size=5)
     
     log_callback(f"🌍 Phát hiện ngôn ngữ gốc: {info.language}")
-    log_callback("--- TIẾN TRÌNH XỬ LÝ AI (v0.5) ---")
+    log_callback("--- TIẾN TRÌNH XỬ LÝ AI ---")
     
-    # Tạo thư mục temp chứa file mp3
+    # Xóa sạch file cũ trong temp nếu có để tránh lồng đè âm thanh cũ
+    if os.path.exists("temp"):
+        for f in os.listdir("temp"):
+            try:os.remove(os.path.join("temp", f))
+            except:pass
     os.makedirs("temp", exist_ok=True)
     
     count = 0
@@ -35,8 +40,6 @@ def transcribe_video(video_path, log_callback):
         vietnamese_text = translate_text(original_text, source_lang='auto', target_lang='vi')
         
         mp3_filename = f"temp/audio_{count}.mp3"
-        
-        # Gọi trực tiếp hàm gTTS chạy đồng bộ, không cần qua vòng lặp loop.run_until_complete phức tạp nữa
         tts_success = text_to_speech_async(vietnamese_text, mp3_filename)
         
         status_tts = "🔊 Đã tạo giọng nói" if tts_success else "❌ Lỗi tạo giọng"
@@ -45,5 +48,12 @@ def transcribe_video(video_path, log_callback):
         
         full_translated_text += vietnamese_text + " "
         
-    log_callback("--- HOÀN THÀNH TẠO GIỌNG NÓI v0.5 ---")
+    log_callback("--- HOÀN THÀNH TIẾN TRÌNH AI (CHUYỂN SANG LỒNG TIẾNG VÀO VIDEO) ---")
+    
+    # Đặt tên file video đầu ra lưu vào thư mục output
+    output_video_name = "output/video_long_tieng_vi.mp4"
+    
+    # Tiến hành gọi MoviePy trộn nhạc lồng tiếng vào video gốc
+    merge_audio_to_video(video_path, output_video_name, log_callback)
+    
     return full_translated_text
